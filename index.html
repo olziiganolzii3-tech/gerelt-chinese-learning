@@ -40,4 +40,61 @@ function vocabPage(){
 }
 
 draw();
+</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const GERELT_URL = "https://ilxgafdcfrukuzxnekbl.supabase.co";
+const GERELT_KEY = "sb_publishable_pNzXJSYc9vEkelgsafejog_KtsrX1Ay";
+const gereltDB = window.supabase.createClient(GERELT_URL, GERELT_KEY);
+
+document.body.insertAdjacentHTML("afterbegin", `
+<div id="gereltAuth" style="position:fixed;inset:0;background:#fffaf1;z-index:99999;overflow:auto;padding:25px 18px;font-family:Arial">
+ <div style="max-width:420px;margin:40px auto;background:white;padding:24px;border-radius:20px">
+  <h1 style="color:#913b48;text-align:center">🌸 ГЭРЭЛТ</h1>
+  <p style="text-align:center">Хятад хэлний сургалт</p>
+  <input id="gName" placeholder="Овог, нэр" style="width:100%;padding:13px;margin:7px 0;box-sizing:border-box">
+  <input id="gEmail" type="email" placeholder="И-мэйл" style="width:100%;padding:13px;margin:7px 0;box-sizing:border-box">
+  <input id="gPass" type="password" placeholder="Нууц үг" style="width:100%;padding:13px;margin:7px 0;box-sizing:border-box">
+  <input id="gInvite" placeholder="Найзын урилгын код (заавал биш)" style="width:100%;padding:13px;margin:7px 0;box-sizing:border-box">
+  <button id="gRegister" style="width:100%;background:#913b48;color:white;padding:14px;margin-top:10px">Бүртгүүлэх</button>
+  <button id="gLogin" style="width:100%;padding:14px;margin-top:8px">Нэвтрэх</button>
+  <p id="gMessage" style="font-size:14px;color:#913b48"></p>
+ </div>
+</div>`);
+
+const msg = document.getElementById("gMessage");
+
+async function enterSite(){
+ const {data,error}=await gereltDB.auth.getSession();
+ if(error || !data.session) return;
+ document.getElementById("gereltAuth").style.display="none";
+}
+
+document.getElementById("gRegister").onclick=async()=>{
+ const name=document.getElementById("gName").value.trim();
+ const email=document.getElementById("gEmail").value.trim();
+ const password=document.getElementById("gPass").value;
+ if(!name || !email || password.length<6){
+  msg.textContent="Нэр, и-мэйлээ оруулж, 6-аас дээш тэмдэгттэй нууц үг сонгоно уу.";
+  return;
+ }
+ const {data,error}=await gereltDB.auth.signUp({
+  email,password,
+  options:{data:{full_name:name}}
+ });
+ if(error){msg.textContent=error.message;return;}
+ msg.textContent="Бүртгэл үүсгэлээ. И-мэйлээ баталгаажуулаад нэвтэрнэ үү.";
+};
+
+document.getElementById("gLogin").onclick=async()=>{
+ const email=document.getElementById("gEmail").value.trim();
+ const password=document.getElementById("gPass").value;
+ const {error}=await gereltDB.auth.signInWithPassword({email,password});
+ if(error){msg.textContent=error.message;return;}
+ await enterSite();
+};
+
+gereltDB.auth.onAuthStateChange((_event,session)=>{
+ if(session) document.getElementById("gereltAuth").style.display="none";
+});
+enterSite();
 </script></body></html>
