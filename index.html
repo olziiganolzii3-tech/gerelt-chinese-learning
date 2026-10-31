@@ -40,7 +40,99 @@ function vocabPage(){
 }
 
 draw();
-</script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</scrip><div id="gereltAuth" style="position:fixed;inset:0;background:#fff8f1;z-index:999999;overflow:auto;padding:25px 18px;font-family:Arial,sans-serif">
+  <div style="max-width:420px;margin:40px auto;background:white;padding:25px;border-radius:20px;box-shadow:0 5px 25px #0001">
+    <h1 style="color:#913b48;text-align:center">🌸 ГЭРЭЛТ</h1>
+    <p style="text-align:center">Хятад хэлний сургалт</p>
+
+    <input id="gName" placeholder="Овог, нэр" style="box-sizing:border-box;width:100%;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
+    <input id="gEmail" type="email" placeholder="И-мэйл" style="box-sizing:border-box;width:100%;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
+    <input id="gPass" type="password" placeholder="Нууц үг" style="box-sizing:border-box;width:100%;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
+    <input id="gInvite" placeholder="Найзын урилгын код (заавал биш)" style="box-sizing:border-box;width:100%;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
+
+    <button id="gRegister" style="width:100%;padding:14px;margin-top:12px;background:#913b48;color:white;border:0;border-radius:10px;font-size:16px">Бүртгүүлэх</button>
+    <button id="gLogin" style="width:100%;padding:14px;margin-top:10px;background:#f3e4df;color:#71313b;border:0;border-radius:10px;font-size:16px">Нэвтрэх</button>
+    <p id="gMessage" style="text-align:center;color:#913b48;overflow-wrap:anywhere"></p>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+const GERELT_URL = "https://ilxgafdcfrukuzxnekbl.supabase.co";
+const GERELT_KEY = "sb_publishable_pNzXJSYc9vEkelgsafejog_KtsrX1Ay";
+const gereltDB = createClient(GERELT_URL, GERELT_KEY);
+
+const message = document.getElementById("gMessage");
+
+document.getElementById("gRegister").onclick = async () => {
+  const name = document.getElementById("gName").value.trim();
+  const email = document.getElementById("gEmail").value.trim();
+  const password = document.getElementById("gPass").value;
+  const invite = document.getElementById("gInvite").value.trim();
+
+  if (!name || !email || !password) {
+    message.textContent = "Овог нэр, и-мэйл, нууц үгээ оруулна уу.";
+    return;
+  }
+
+  message.textContent = "Бүртгэж байна...";
+
+  const { data, error } = await gereltDB.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: name,
+        referral_code: invite
+      }
+    }
+  });
+
+  if (error) {
+    message.textContent = "Алдаа: " + error.message;
+  } else if (data.session) {
+    message.textContent = "Амжилттай бүртгүүллээ!";
+    document.getElementById("gereltAuth").style.display = "none";
+  } else {
+    message.textContent = "Бүртгэл үүслээ. И-мэйлээ шалгаж баталгаажуулна уу.";
+  }
+};
+
+document.getElementById("gLogin").onclick = async () => {
+  const email = document.getElementById("gEmail").value.trim();
+  const password = document.getElementById("gPass").value;
+
+  if (!email || !password) {
+    message.textContent = "И-мэйл болон нууц үгээ оруулна уу.";
+    return;
+  }
+
+  message.textContent = "Нэвтэрч байна...";
+
+  const { data, error } = await gereltDB.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    message.textContent = "Алдаа: " + error.message;
+  } else {
+    document.getElementById("gereltAuth").style.display = "none";
+  }
+};
+
+const { data } = await gereltDB.auth.getSession();
+if (data.session) {
+  document.getElementById("gereltAuth").style.display = "none";
+}
+
+gereltDB.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    document.getElementById("gereltAuth").style.display = "none";
+  }
+});
+</script>
 <script>
 const GERELT_URL = "https://ilxgafdcfrukuzxnekbl.supabase.co";
 const GERELT_KEY = "sb_publishable_pNzXJSYc9vEkelgsafejog_KtsrX1Ay";
